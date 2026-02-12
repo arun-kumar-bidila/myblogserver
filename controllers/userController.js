@@ -3,12 +3,9 @@ import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-
-const createToken=(id)=>{
-
-    return jwt.sign({id},process.env.SECRET);
-
-}
+const createToken = (id) => {
+  return jwt.sign({ id }, process.env.SECRET);
+};
 
 const signUpUser = async (req, res) => {
   try {
@@ -30,19 +27,44 @@ const signUpUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    const user=await newUser.save();
+    const user = await newUser.save();
 
-    const token=createToken(user._id);
+    const token = createToken(user._id);
 
-    return res.status(201).json({user,accessToken:token});
-
-
-
+    return res.status(201).json({ user, accessToken: token });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({message:"Error occured in acc creation"});
+    return res.status(500).json({ message: "Error occured in acc creation" });
   }
 };
 
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-export {signUpUser};
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User Doesn't exist" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if(!isMatch){
+      return res.status(401).json({message:"Password Incorrect"});
+
+    }
+
+    const token=createToken(user._id);
+
+    return res.status(200).json({accessToken:token,user});
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({message:"Error occured in login"})
+
+
+
+  }
+};
+
+export { signUpUser,loginUser };
