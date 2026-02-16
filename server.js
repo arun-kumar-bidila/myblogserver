@@ -26,7 +26,7 @@ app.get("/test",(req,res)=>{
 
 //ROUTES
 app.use("/api/auth",userRouter);
-app.use("/api/upload",blogRouter)
+app.use("/api/blog",blogRouter)
 
 app.listen(process.env.PORT,"0.0.0.0",()=>{
     console.log("Server Running Successfully on port :"+process.env.PORT);

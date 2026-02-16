@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { uploadBlog, uploadBlogImage } from "../controllers/blogController.js";
+import { getAllBlogs, uploadBlog, uploadBlogImage } from "../controllers/blogController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 const upload = multer({
   dest: "uploads/",
@@ -9,7 +9,13 @@ const upload = multer({
 
 const blogRouter = express.Router();
 
-blogRouter.post("/blogimage", upload.single("image"), uploadBlogImage);
-blogRouter.post("/blog",authMiddleware,uploadBlog);
+blogRouter.post(
+  "/uploadimage",
+  authMiddleware,
+  upload.single("image"),
+  uploadBlogImage,
+);
+blogRouter.post("/uploadblog", authMiddleware, uploadBlog);
+blogRouter.get("/getallblogs",authMiddleware,getAllBlogs);   
 
 export default blogRouter;

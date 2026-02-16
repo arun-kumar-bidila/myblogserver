@@ -26,7 +26,8 @@ const uploadBlogImage = async (req, res) => {
 
 const uploadBlog = async (req, res) => {
   try {
-    const { title, content, imageUrl, posterId, selectedTopics,updated } = req.body;
+    const { title, content, imageUrl, posterId, selectedTopics, updated } =
+      req.body;
 
     const newBlog = new Blog({
       title,
@@ -34,7 +35,7 @@ const uploadBlog = async (req, res) => {
       imageUrl,
       posterId,
       selectedTopics,
-      updated
+      updated,
     });
 
     const blog = await newBlog.save();
@@ -45,4 +46,14 @@ const uploadBlog = async (req, res) => {
   }
 };
 
-export { uploadBlog, uploadBlogImage };
+const getAllBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.find({});
+    return res.status(200).json({ blogs });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to fetch blogs" });
+  }
+};
+
+export { uploadBlog, uploadBlogImage ,getAllBlogs};
