@@ -23,7 +23,12 @@ const blogSchema= new mongoose.Schema({
             type:String,
 
         }
-    ]
+    ],
+    updated:{
+        type:Date,
+        default:Date.now
+
+    }
 
 },{timestamps:true});
 

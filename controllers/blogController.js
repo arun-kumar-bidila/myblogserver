@@ -1,9 +1,32 @@
 import express from "express";
 import Blog from "../models/blogModel.js";
 
+import cloudinary from "../config/cloudinary.js";
+import fs from "fs";
+
+const uploadBlogImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(500).json({ message: "Image is missing" });
+    }
+    console.log(process.env.CLOUD_API_KEY);
+    console.log(req.file.path);
+    const result = await cloudinary.uploader.upload(req.file.path);
+    if (!result) {
+      return res.status(500).json({ message: "Failed to Upload" });
+    }
+    fs.unlinkSync(req.file.path);
+
+    return res.status(200).json({ imageUrl: result.secure_url });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to Upload Image" });
+  }
+};
+
 const uploadBlog = async (req, res) => {
   try {
-    const { title, content, imageUrl, posterId, selectedTopics } = req.body;
+    const { title, content, imageUrl, posterId, selectedTopics,updated } = req.body;
 
     const newBlog = new Blog({
       title,
@@ -11,17 +34,15 @@ const uploadBlog = async (req, res) => {
       imageUrl,
       posterId,
       selectedTopics,
+      updated
     });
 
     const blog = await newBlog.save();
     return res.status(200).json({ blog });
-
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Error occ in Blog Uploading" });
   }
 };
 
-
-export {uploadBlog}
+export { uploadBlog, uploadBlogImage };

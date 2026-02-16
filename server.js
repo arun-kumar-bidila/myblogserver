@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import cors from "cors"
 import userRouter from "./routes/userRoutes.js";
+import blogRouter from "./routes/blogRoutes.js";
 
 
 
@@ -25,6 +26,7 @@ app.get("/test",(req,res)=>{
 
 //ROUTES
 app.use("/api/auth",userRouter);
+app.use("/api/upload",blogRouter)
 
 app.listen(process.env.PORT,"0.0.0.0",()=>{
     console.log("Server Running Successfully on port :"+process.env.PORT);
