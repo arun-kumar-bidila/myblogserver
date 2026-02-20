@@ -60,12 +60,6 @@ const getUserBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find({ posterId: req.userId });
 
-    if (!blogs) {
-      return res
-        .status(200)
-        .json({ message: "Currently Your don't Have Any Blogs" });
-    }
-
     return res.status(200).json({blogs});
   } catch (error) {
     console.log(error);
