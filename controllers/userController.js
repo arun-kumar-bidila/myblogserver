@@ -2,9 +2,15 @@ import express from "express";
 import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import sendMail from "../config/sendMail.js";
+import PendingUser from "../models/pendingUser.js";
 
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET);
+};
+
+const createOtp = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 const signUpUser = async (req, res) => {
@@ -21,20 +27,69 @@ const signUpUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({
-      name,
-      email,
-      password: hashedPassword,
+    const otp = createOtp();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    await PendingUser.findOneAndUpdate(
+      { email },
+      {
+        name,
+        email,  
+        password: hashedPassword,
+        otp: hashedOtp,
+        otpExpiry: Date.now() + 10 * 60 * 1000,
+      },
+      { upsert: true },
+    );
+
+    await sendMail(email, otp);
+    
+
+    return res.status(201).json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Error occured in sending otp , Try Again" });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const pendingUser = await PendingUser.findOne({ email });
+
+    if (!pendingUser || !pendingUser.otp) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+
+    if (pendingUser.otpExpiry < Date.now()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+    console.log(otp);
+
+    const isMatch = await bcrypt.compare(otp, pendingUser.otp);
+      if (!isMatch) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    const user = await User.create({
+      name: pendingUser.name,
+      email: pendingUser.email,
+      password: pendingUser.password,
     });
 
-    const user = await newUser.save();
+    await PendingUser.deleteOne({ email });
 
     const token = createToken(user._id);
 
     return res.status(201).json({ user, accessToken: token });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Error occured in acc creation" });
+    return res
+      .status(500)
+      .json({ message: "Error occured in otp Verification" });
   }
 };
 
@@ -42,7 +97,7 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       return res.status(400).json({ message: "User Doesn't exist" });
@@ -65,7 +120,7 @@ const loginUser = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("-password");
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -82,7 +137,7 @@ const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId).select("+password");
 
     if (!user) {
       return res
@@ -116,4 +171,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-export { signUpUser, loginUser, getUser,changePassword };
+export { signUpUser, loginUser, getUser, changePassword, verifyOtp };
