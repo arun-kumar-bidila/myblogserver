@@ -116,4 +116,19 @@ const changePassword = async (req, res) => {
   }
 };
 
-export { signUpUser, loginUser, getUser,changePassword };
+const saveFcmToken = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { fcmToken } = req.body;
+
+    await User.findByIdAndUpdate(userId, {
+      fcmToken: fcmToken,
+    });
+
+    res.status(200).json({ message: "Token Saved" });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to Save FCM Token" });
+  }
+};
+
+export { signUpUser, loginUser, getUser, changePassword, saveFcmToken };

@@ -3,6 +3,7 @@ import Blog from "../models/blogModel.js";
 
 import cloudinary from "../config/cloudinary.js";
 import fs from "fs";
+import sendNotificationToAll from "../config/firebase.js";
 
 const uploadBlogImage = async (req, res) => {
   try {
@@ -39,6 +40,7 @@ const uploadBlog = async (req, res) => {
     });
 
     const blog = await newBlog.save();
+    await sendNotificationToAll(blog);
     return res.status(200).json({ blog });
   } catch (error) {
     console.log(error);
