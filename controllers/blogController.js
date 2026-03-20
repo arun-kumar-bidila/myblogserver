@@ -3,7 +3,7 @@ import Blog from "../models/blogModel.js";
 
 import cloudinary from "../config/cloudinary.js";
 import fs from "fs";
-import sendNotificationToAll from "../config/firebase.js";
+import sendNotificationToAll from "../services/notificationService.js";
 
 const uploadBlogImage = async (req, res) => {
   try {
