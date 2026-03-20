@@ -1,31 +1,12 @@
-import admin from "../config/firebase.js";
+import admin from "firebase-admin";
+import dotenv from "dotenv";
+dotenv.config();
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-import User from "../models/userModel.js";
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
 
-const sendNotificationToAll = async (blog) => {
-  try {
-    const users = await User.find({ fcmToken: { $ne: null } });
-    const fcmTokens = users.map((u) => u.fcmToken);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
-    if (fcmTokens.length == 0) return;
-
-    const message = {
-      notification: {
-        title: "New Blog Uploaded",
-        body: blog.title,
-      },
-      data:{
-        blogId:blog._id.toString()
-      },
-      tokens: fcmTokens,
-    };
-
-    const response = await admin.messaging().sendEachForMulticast(message);
-    console.log("Success:", response.successCount);
-    console.log("Failed:", response.failureCount);
-  } catch (error) {
-    console.error("FCM Error:", error);
-  }
-};
-
-export default sendNotificationToAll;
+export default admin;
