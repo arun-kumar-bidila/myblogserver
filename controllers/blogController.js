@@ -50,7 +50,7 @@ const uploadBlog = async (req, res) => {
 
 const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find({});
+    const blogs = await Blog.find({}).sort({createdAt:-1});
     return res.status(200).json({ blogs });
   } catch (error) {
     console.log(error);
